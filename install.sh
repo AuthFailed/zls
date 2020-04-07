@@ -62,27 +62,12 @@ EOF
 fdisk -l /dev/$disk
 
 # Partition filesystem formatting and mount
-if [ ${disk:0:4} = "nvme" ]; then 
-  yes | mkfs.fat -F32 /dev/${disk}p1
-  yes | mkfs.ext4 /dev/${disk}p2
-  yes | mkfs.ext4 /dev/${disk}p3
-
-  mount /dev/${disk}p2 /mnt
-  mkdir /mnt/boot
-  mkdir /mnt/home
-  mount /dev/${disk}p1 /mnt/boot
-  mount /dev/${disk}p3 /mnt/home
-else 
-  yes | mkfs.fat -F32 /dev/${disk}1
-  yes | mkfs.ext4 /dev/${disk}2
-  yes | mkfs.ext4 /dev/${disk}3
-
-  mount /dev/${disk}2 /mnt
-  mkdir /mnt/boot
-  mkdir /mnt/home
-  mount /dev/${disk}1 /mnt/boot
-  mount /dev/${disk}3 /mnt/home
-fi
+# disk mount
+mount /dev/${selected_disk}3 /mnt
+mkdir /mnt/boot
+mkdir /mnt/home
+mount /dev/${selected_disk}1 /mnt/boot
+mount /dev/${selected_disk}2 /mnt/home
 
 # Choosing desktop environment
 de=$(printf "Deepin\ni3\nGNOME" | fzf)

@@ -1,5 +1,3 @@
-#!/bin/bash
-
 echo "";
 echo "      			 _______       _____ ";
 echo "      			|___  / |     / ____|";
@@ -26,28 +24,27 @@ pacman -Syyy
 # Установка FZF
 pacman -S --noconfirm fzf
 
-# Выбор диска для использования
-disk=$(sudo fdisk -l | grep 'Disk /dev/' | awk '{print $2,$3,$4}' | sed 's/,$//' | \
-fzf --preview 'echo -e "Выберите диск для использования.\nПомните о следующем:\n\n500M: раздел /boot\n100G: раздел /root\nВсё оставшееся место будет использовано под /home"' | \
-sed -e 's/\/dev\/\(.*\):/\1/' | awk '{print $1}')
+# open dialog for disk selection
+selected_disk=$(sudo fdisk -l | grep 'Disk /dev/' | awk '{print $2,$3,$4}' | sed 's/,$//' | fzf | sed -e 's/\/dev\/\(.*\):/\1/' | awk '{print $1}')  
 
-# Formatting disk
-sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk /dev/$disk
+# formatting disk for UEFI install
+echo "Formatting disk for UEFI install"
+sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk /dev/${selected_disk}
   g # gpt partitioning
   n # new partition
     # default: primary partition
     # default: partition 1
-  +500M # 500 mb on boot partition
+  +${boot_partition_size}M # mb on boot partition
     # default: yes if asked
   n # new partition
     # default: primary partition
     # default: partition 2
-  +100G # 100 gb for root partition
+  +${home_partition_size}G # gb for home partition
     # default: yes if asked
   n # new partition
     # default: primary partition
     # default: partition 3
-    # default: all space left of for home partition
+    # default: all space left of for root partition
     # default: yes if asked
   t # change partition type
   1 # selecting partition 1
@@ -55,15 +52,15 @@ sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk /dev/$disk
   w # writing changes to disk
 EOF
 
-# Вывод изменений в разметке
-fdisk -l /dev/$disk
+# outputting partition changes
+fdisk -l /dev/${selected_disk}
 
-# форматирование файловой системы раздела
+# partition filesystem formatting
 yes | mkfs.fat -F32 /dev/${selected_disk}1
 yes | mkfs.ext4 /dev/${selected_disk}2
 yes | mkfs.ext4 /dev/${selected_disk}3
 
-# монтирование диска
+# disk mount
 mount /dev/${selected_disk}3 /mnt
 mkdir /mnt/boot
 mkdir /mnt/home

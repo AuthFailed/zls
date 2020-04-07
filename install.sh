@@ -123,7 +123,7 @@ arch-chroot /mnt locale-gen
 arch-chroot /mnt echo "LANG=en_US.UTF-8" >> /mnt/etc/locale.conf
 
 # Установка названия машины
-arch-chroot /mnt read -p "Введите название машины (только одно слово):" machine
+arch-chroot /mnt read -p "PC name (only 1 word):" machine
 
 # Setting machine name
 arch-chroot /mnt echo ${machine} >> /mnt/etc/hostname
@@ -137,7 +137,7 @@ arch-chroot /mnt echo "127.0.1.1 ${machine}.localdomain ${machine}" >> /mnt/etc/
 arch-chroot /mnt sed -ie 's/# %wheel ALL=(ALL)/%wheel ALL=(ALL)/g' /etc/sudoers
 
 # Choose your username
-arch-chroot /mnt read -p "Введите username (только одно слово):" username
+arch-chroot /mnt read -p "Your username (only 1 word):" username
 
 # Make initframs
 arch-chroot /mnt mkinitcpio -p linux

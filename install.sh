@@ -93,7 +93,7 @@ kitty libsecret gnome-keyring libgnome-keyring dnsutils \
 os-prober efibootmgr ntfs-3g unzip wireless_tools ccache \
 iw wpa_supplicant iwd ppp dhcpcd netctl linux linux-firmware \
 linux-headers picom xf86-video-intel mesa bumblebee powertop \
-gtk3 lightdm lightdm-webkit2-greeter lightdm-webkit2-greeter-litarvan
+gtk3 lightdm lightdm-webkit2-greeter lightdm-webkit-theme-litarvan
 
 # Генерация fstab
 genfstab -U /mnt >> /mnt/etc/fstab

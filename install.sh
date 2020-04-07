@@ -1,28 +1,48 @@
 echo "";
-echo "      			 _______       _____ ";
-echo "      			|___  / |     / ____|";
-echo "      			   / /| |    | (___  ";
-echo "      			  / / | |     \___ \ ";
-echo "       			 / /__| |____ ____) |";
-echo "      			/_____|______|_____/ ";
-echo "                                       ";
-echo "         Скрипт установки ArchLinux ";
+echo "                              _       _        ";
+echo "       _ __ ___  _ __ ___ ___| |_ __ | | _____ ";
+echo "      | '_ \` _ \| '__/ __|_  / | '_ \| |/ / __|";
+echo "      | | | | | | | | (__ / /| | | | |   <\__ \\";
+echo "      |_| |_| |_|_|  \___/___|_|_| |_|_|\_\___/";
+echo "                                        ";
+echo "                                                       ";
+
+echo "     Easy-to-configure archlinux+i3 install script ";
+echo "        for maximum comfort and minimum hassles ";
 echo "";
 echo "";
 
-# Синхронизация даты
+root_password="123"
+user_password="123"
+
+# boot partition size, in MB
+boot_partition_size=500
+
+# home partition size, in GB
+home_partition_size=40
+
+# checks wheter there is multilib repo enabled properly or not
+IS_MULTILIB_REPO_DISABLED=$(cat /etc/pacman.conf | grep "#\[multilib\]" | wc -l)
+if [ "$IS_MULTILIB_REPO_DISABLED" == "1" ]
+then
+    echo "You need to enable [multilib] repository inside /etc/pacman.conf file before running this script, aborting installation"
+    exit -1
+fi
+echo "[multilib] repo correctly enabled, continuing"
+
+# syncing system datetime
 timedatectl set-ntp true
 
-# Установка зеркал с России
-wget -O mirrorlist "https://www.archlinux.org/mirrorlist/?country=RU&protocol=https&ip_version=4"
-sed -ie 's/^.//g' ./mirrorlist
+# getting latest mirrors for italy and germany
+wget -O mirrorlist "https://www.archlinux.org/mirrorlist/?country=DE&country=IT&protocol=https&ip_version=4"
+sed -i -e 's/^.//g' ./mirrorlist
 mv ./mirrorlist /etc/pacman.d/mirrorlist
 
-# Обновление зеркал
+# updating mirrors
 pacman -Syyy
 
-# Установка FZF
-pacman -S --noconfirm fzf
+# adding fzf for making disk selection easier
+pacman -S fzf --noconfirm
 
 # open dialog for disk selection
 selected_disk=$(sudo fdisk -l | grep 'Disk /dev/' | awk '{print $2,$3,$4}' | sed 's/,$//' | fzf | sed -e 's/\/dev\/\(.*\):/\1/' | awk '{print $1}')  
@@ -66,7 +86,6 @@ mkdir /mnt/boot
 mkdir /mnt/home
 mount /dev/${selected_disk}1 /mnt/boot
 mount /dev/${selected_disk}2 /mnt/home
-
 # установка стандартных пакетов
 pacstrap /mnt base base-devel vim grub networkmanager \
 git zsh amd-ucode curl xorg xorg-server go tlp termite \

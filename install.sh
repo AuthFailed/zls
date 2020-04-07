@@ -61,7 +61,11 @@ EOF
 # Outputting partition changes
 fdisk -l /dev/$disk
 
-# Partition filesystem formatting and mount
+# partition filesystem formatting
+yes | mkfs.fat -F32 /dev/${selected_disk}1
+yes | mkfs.ext4 /dev/${selected_disk}2
+yes | mkfs.ext4 /dev/${selected_disk}3
+
 # disk mount
 mount /dev/${selected_disk}3 /mnt
 mkdir /mnt/boot

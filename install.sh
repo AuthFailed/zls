@@ -1,70 +1,56 @@
+#!/bin/bash
+
 echo "";
-echo "                              _       _        ";
-echo "       _ __ ___  _ __ ___ ___| |_ __ | | _____ ";
-echo "      | '_ \` _ \| '__/ __|_  / | '_ \| |/ / __|";
-echo "      | | | | | | | | (__ / /| | | | |   <\__ \\";
-echo "      |_| |_| |_|_|  \___/___|_|_| |_|_|\_\___/";
-echo "                                        ";
-echo "                                                       ";
-
-echo "     Easy-to-configure archlinux+i3 install script ";
-echo "        for maximum comfort and minimum hassles ";
+echo "      			 _______       _____ ";
+echo "      			|___  / |     / ____|";
+echo "      			   / /| |    | (___  ";
+echo "      			  / / | |     \___ \ ";
+echo "       			 / /__| |____ ____) |";
+echo "      			/_____|______|_____/ ";
+echo "                                       ";
+echo "         ArchLinux install script ";
 echo "";
 echo "";
 
-root_password="123"
-user_password="123"
-
-# boot partition size, in MB
-boot_partition_size=500
-
-# home partition size, in GB
-home_partition_size=40
-
-# checks wheter there is multilib repo enabled properly or not
-IS_MULTILIB_REPO_DISABLED=$(cat /etc/pacman.conf | grep "#\[multilib\]" | wc -l)
-if [ "$IS_MULTILIB_REPO_DISABLED" == "1" ]
-then
-    echo "You need to enable [multilib] repository inside /etc/pacman.conf file before running this script, aborting installation"
-    exit -1
-fi
-echo "[multilib] repo correctly enabled, continuing"
-
-# syncing system datetime
+# Syncing system datetime
 timedatectl set-ntp true
 
-# getting latest mirrors for italy and germany
+# Getting latest mirrors for italy and germany
 wget -O mirrorlist "https://www.archlinux.org/mirrorlist/?country=DE&country=IT&protocol=https&ip_version=4"
-sed -i -e 's/^.//g' ./mirrorlist
+sed -ie 's/^.//g' ./mirrorlist
 mv ./mirrorlist /etc/pacman.d/mirrorlist
 
-# updating mirrors
+# Updating mirrors
 pacman -Syyy
 
-# adding fzf for making disk selection easier
-pacman -S fzf --noconfirm
+# Installs FZF
+pacman -S --noconfirm fzf
 
-# open dialog for disk selection
-selected_disk=$(sudo fdisk -l | grep 'Disk /dev/' | awk '{print $2,$3,$4}' | sed 's/,$//' | fzf | sed -e 's/\/dev\/\(.*\):/\1/' | awk '{print $1}')  
+# Choose which type of install you're going to use
+install_type=$(printf "Intel\nAMD" | fzf)
 
-# formatting disk for UEFI install
-echo "Formatting disk for UEFI install"
-sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk /dev/${selected_disk}
+# Choose which disk you wanna use
+disk=$(sudo fdisk -l | grep 'Disk /dev/' | awk '{print $2,$3,$4}' | sed 's/,$//' | \
+fzf --preview 'echo -e "Choose the disk you want to use.\nKeep in mind it will follow this rules:\n\n500M: boot partition\n100G: root partition\nAll remaining space for home partition"' | \
+sed -e 's/\/dev\/\(.*\):/\1/' | awk '{print $1}')
+
+# Formatting disk
+sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk /dev/$disk
   g # gpt partitioning
   n # new partition
     # default: primary partition
     # default: partition 1
-  +${boot_partition_size}M # mb on boot partition
+  +500M # 500 mb on boot partition
     # default: yes if asked
   n # new partition
     # default: primary partition
     # default: partition 2
-  +${home_partition_size}G # gb for home partition
+  +100G # 100 gb for root partition
     # default: yes if asked
   n # new partition
     # default: primary partition
     # default: partition 3
-    # default: all space left of for root partition
+    # default: all space left of for home partition
     # default: yes if asked
   t # change partition type
   1 # selecting partition 1
@@ -72,20 +58,32 @@ sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk /dev/${selected_disk}
   w # writing changes to disk
 EOF
 
-# outputting partition changes
-fdisk -l /dev/${selected_disk}
+# Outputting partition changes
+fdisk -l /dev/$disk
 
-# partition filesystem formatting
-yes | mkfs.fat -F32 /dev/${selected_disk}1
-yes | mkfs.ext4 /dev/${selected_disk}2
-yes | mkfs.ext4 /dev/${selected_disk}3
+# Partition filesystem formatting and mount
+if [ ${disk:0:4} = "nvme" ]; then 
+  yes | mkfs.fat -F32 /dev/${disk}p1
+  yes | mkfs.ext4 /dev/${disk}p2
+  yes | mkfs.ext4 /dev/${disk}p3
 
-# disk mount
-mount /dev/${selected_disk}3 /mnt
-mkdir /mnt/boot
-mkdir /mnt/home
-mount /dev/${selected_disk}1 /mnt/boot
-mount /dev/${selected_disk}2 /mnt/home
+  mount /dev/${disk}p2 /mnt
+  mkdir /mnt/boot
+  mkdir /mnt/home
+  mount /dev/${disk}p1 /mnt/boot
+  mount /dev/${disk}p3 /mnt/home
+else 
+  yes | mkfs.fat -F32 /dev/${disk}1
+  yes | mkfs.ext4 /dev/${disk}2
+  yes | mkfs.ext4 /dev/${disk}3
+
+  mount /dev/${disk}2 /mnt
+  mkdir /mnt/boot
+  mkdir /mnt/home
+  mount /dev/${disk}1 /mnt/boot
+  mount /dev/${disk}3 /mnt/home
+fi
+
 # установка стандартных пакетов
 pacstrap /mnt base base-devel vim grub networkmanager \
 git zsh amd-ucode curl xorg xorg-server go tlp termite \

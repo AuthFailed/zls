@@ -163,64 +163,6 @@ arch-chroot /mnt echo "exec i3" > /mnt/home/authfailed/.xinitrc
 arch-chroot /mnt sed -i -e 's/#MAKEFLAGS="-j2"/MAKEFLAGS=-j'$(nproc --ignore 1)'/' -e 's/-march=x86-64 -mtune=generic/-march=native/' -e 's/xz -c -z/xz -c -z -T '$(nproc --ignore 1)'/' /etc/makepkg.conf
 arch-chroot /mnt sed -ie 's/!ccache/ccache/g' /etc/makepkg.conf
 
-
-
-
-
-# Installing yay
-arch-chroot /mnt sudo -u authfailed mkdir /home/authfailed/yay_tmp_install
-arch-chroot /mnt sudo -u authfailed git clone https://aur.archlinux.org/yay.git /home/authfailed/yay_tmp_install
-arch-chroot /mnt sudo -u authfailed cd /home/authfailed/yay_tmp_install && yes | makepkg -si
-arch-chroot /mnt rm -rf /home/authfailed/yay_tmp_install
-
-
-# Installing i3-gaps and polybar
-arch-chroot /mnt sudo -u authfailed yay -S --noconfirm i3-gaps 
-arch-chroot /mnt sudo -u authfailed yay -S --noconfirm polybar
-arch-chroot /mnt sudo -u authfailed yay -S --noconfirm brave-bin
-arch-chroot /mnt sudo -u authfailed yay -S --noconfirm otf-font-awesome
-
-# Installing fonts
-arch-chroot /mnt sudo -u authfailed mkdir /home/authfailed/fonts_tmp_folder
-arch-chroot /mnt sudo -u authfailed sudo mkdir /usr/share/fonts/OTF/
-
-# Material font
-arch-chroot /mnt sudo -u authfailed "cd /home/authfailed/fonts_tmp_folder && wget https://github.com/adi1090x/polybar-themes/blob/master/polybar-8/fonts/Material.ttf"
-arch-chroot /mnt sudo -u authfailed "sudo cp /home/authfailed/fonts_tmp_folder/Material.ttf /usr/share/fonts/OTF/"
-# Iosevka font
-arch-chroot /mnt sudo -u authfailed "cd /home/authfailed/fonts_tmp_folder && wget https://github.com/adi1090x/polybar-themes/blob/master/polybar-8/fonts/iosevka-regular.ttf"
-arch-chroot /mnt sudo -u authfailed "sudo cp /home/authfailed/fonts_tmp_folder/iosevka-regular.ttf /usr/share/fonts/OTF/"
-# Meslo for powerline font
-arch-chroot /mnt sudo -u authfailed "cd /home/authfailed/fonts_tmp_folder && wget https://github.com/powerline/fonts/blob/master/Meslo%20Slashed/Meslo%20LG%20M%20Regular%20for%20Powerline.ttf"
-arch-chroot /mnt sudo -u authfailed "sudo cp /home/authfailed/fonts_tmp_folder/Meslo\ LG\ M\ Regular\ for\ Powerline.ttf /usr/share/fonts/OTF/"
-# Removing fonts tmp folder
-arch-chroot /mnt sudo -u authfailed rm -rf /home/authfailed/fonts_tmp_folder
-
-# Installing configs
-arch-chroot /mnt sudo -u authfailed mkdir /home/authfailed/GitHub
-arch-chroot /mnt sudo -u authfailed git clone https://github.com/zetaemme/dotfiles /home/authfailed/GitHub/dotfiles
-arch-chroot /mnt sudo -u authfailed git clone https://github.com/zetaemme/zls /home/authfailed/GitHub/zls
-arch-chroot /mnt sudo -u authfailed "chmod +x /home/authfailed/GitHub/zls/install_configs.sh"
-arch-chroot /mnt sudo -u authfailed /bin/zsh -c "cd /home/authfailed/GitHub/zls && ./install_configs.sh"
-
-# Setting lightdm greeter
-arch-chroot /mnt sudo -u authfailed sed -i '102s/^#.*greeter-session=/s/^#//' /etc/lightdm/lightdm.conf
-arch-chroot /mnt sudo -u authfailed sed -i '102s/^greeter-session=/ s/$/lightdm-webkit2-greeter/' /etc/lightdm/lightdm.conf
-
-arch-chroot /mnt sudo -u authfailed sed -i '111s/^#.*session-startup-script=/s/^#//' /etc/lightdm/lightdm.conf
-arch-chroot /mnt sudo -u authfailed sed -i '111s/^session-startup-script=/ s/$//home/zetaemme/.fehbg' /etc/lightdm/lightdm.conf
-
-arch-chroot /mnt sudo -u authfailed sed -i '21s/^webkit_theme/ s/$/ litarvan' /etc/lightdm/lightdm-webkit2-greeter.conf
-
-# Unmounting all mounted partitions
-umount -R /mnt
-
-# Syncing disks
-sync
-
 echo ""
 echo "INSTALLATION COMPLETE!"
 echo ""
-
-# Waits 3 secs then reboot
-sleep 3 && reboot

@@ -169,18 +169,18 @@ arch-chroot /mnt su authfailed
 mkdir /home/authfailed/yay_tmp_install
 git clone https://aur.archlinux.org/yay.git /home/authfailed/yay_tmp_install
 cd /home/authfailed/yay_tmp_install && yes | makepkg -si
-arch-chroot /mnt rm -rf /home/authfailed/yay_tmp_install
+rm -rf /home/authfailed/yay_tmp_install
 
 
 # Installing i3-gaps and polybar
-arch-chroot /mnt sudo -u authfailed yay -S --noconfirm i3-gaps 
+yay -S --noconfirm i3-gaps 
 yay -S --noconfirm polybar
 yay -S --noconfirm brave-bin
 yay -S --noconfirm otf-font-awesome
 
 # Installing fonts
 mkdir /home/authfailed/fonts_tmp_folder
-sudo mkdir /usr/share/fonts/OTF/
+mkdir /usr/share/fonts/OTF/
 
 # Material font
 cd /home/authfailed/fonts_tmp_folder && wget https://github.com/adi1090x/polybar-themes/blob/master/polybar-8/fonts/Material.ttf
@@ -192,25 +192,27 @@ sudo cp /home/authfailed/fonts_tmp_folder/iosevka-regular.ttf /usr/share/fonts/O
 cd /home/authfailed/fonts_tmp_folder && wget https://github.com/powerline/fonts/blob/master/Meslo%20Slashed/Meslo%20LG%20M%20Regular%20for%20Powerline.ttf
 sudo cp /home/authfailed/fonts_tmp_folder/Meslo\ LG\ M\ Regular\ for\ Powerline.ttf /usr/share/fonts/OTF/
 # Removing fonts tmp folder
+cd ..
 rm -rf /home/authfailed/fonts_tmp_folder
 
 # Installing configs
 mkdir /home/authfailed/GitHub
 git clone https://github.com/zetaemme/dotfiles /home/authfailed/GitHub/dotfiles
-git clone https://github.com/zetaemme/zls /home/authfailed/GitHub/zls
+git clone https://github.com/authfailed/zls /home/authfailed/GitHub/zls
 chmod +x /home/authfailed/GitHub/zls/install_configs.sh
-/bin/zsh -c "cd /home/authfailed/GitHub/zls && ./install_configs.sh"
+cd /home/authfailed/GitHub/zls && sudo ./install_configs.sh
 
 # Setting lightdm greeter
-sed -i '102s/^#.*greeter-session=/s/^#//' /etc/lightdm/lightdm.conf
-sed -i '102s/^greeter-session=/ s/$/lightdm-webkit2-greeter/' /etc/lightdm/lightdm.conf
+sed -i '102s^#.*greeter-session=s^#' /etc/lightdm/lightdm.conf
+sed -i '102s^greeter-session= s$lightdm-webkit2-greeter' /etc/lightdm/lightdm.conf
 
-sed -i '111s/^#.*session-startup-script=/s/^#//' /etc/lightdm/lightdm.conf
-sed -i '111s/^session-startup-script=/ s/$//home/zetaemme/.fehbg' /etc/lightdm/lightdm.conf
+sed -i '111s^#.*session-startup-script=s^#' /etc/lightdm/lightdm.conf
+sed -i '111s^session-startup-script= s/$//home/authfailed/.fehbg' /etc/lightdm/lightdm.conf
 
-sed -i '21s/^webkit_theme/ s/$/ litarvan' /etc/lightdm/lightdm-webkit2-greeter.conf
+sed -i '21s^webkit_theme s$ litarvan' /etc/lightdm/lightdm-webkit2-greeter.conf
 
 # Unmounting all mounted partitions
+exit
 umount -R /mnt
 
 # Syncing disks
